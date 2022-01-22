@@ -1,6 +1,5 @@
 import math
 import numpy as np
-from PIL import Image
 np.set_printoptions(suppress=True)
 
 

@@ -1,4 +1,5 @@
 import points as pt
+from PIL import Image
 
 
 class Command:
@@ -117,17 +118,49 @@ class CmdBuilder:
         x, y, z = pu.get_midpoint(points)
         self.motion_shrink_to_point(points, x, y, z, t0, t1, name, speed, zoom)
 
-    def color_particle_img(self, points, color, size, t0, t1):
+    def particle_img(self, filename, x0, y0, z0, zoom_level, t0, t1, particle_name):
+        """
+        生成粒子画，仅读取黑色像素点
+        :param filename: images文件下的图片名（注意带后缀）
+        :param x0: 图片左上角坐标 x
+        :param y0: 图片左上角坐标 y
+        :param z0: 图片左上角坐标 z
+        :param zoom_level: 缩放级别，整数（推荐5）
+        :param t0: 起始Tick
+        :param t1: 结束Tick
+        :param particle_name: 粒子名
+        :return: None
+        """
+        points = []
+        im = Image.open(f'./images/{filename}')
+        width, height = im.size[0], im.size[1]
+        for w in range(0, width):
+            for h in range(0, height):
+                imgdata = (im.getpixel((w, h)))
+                if imgdata == (0, 0, 0):
+                    x = x0 + w / zoom_level
+                    y = y0 - h / zoom_level
+                    z = z0
+                    points.append([x, y, z])
+        self.static_particle(t0, t1, points, particle_name, 0, 0, 0, 0, 1)
+
+    def color_particle_img(self, filename, x0, y0, z0, zoom_level, t0, t1, particle_size):
         """生成彩色粒子画（1.13+）"""
         # particle minecraft:dust 1 1 1 1 ~ ~ ~ 0 0 0 0 1
-        # self.temp_cmds = []
-        # for p, c in zip(points, color):
-        #     name = 'dust '
-        #     x, y, z = p[0], p[1], p[2]
-        #     dx, dy, dz = c[0], c[1], c[2]
-        #     cmd = Command(t0, name, x, y, z, dx, dy, dz, 0, 1)
-        #     self.temp_cmds.append(cmd)
-        # self.cmds_to_seq(t0, t1, self.temp_cmds)
+        self.temp_cmds = []
+        im = Image.open(f'./images/{filename}')
+        width, height = im.size[0], im.size[1]
+        for w in range(0, width):
+            for h in range(0, height):
+                imgdata = (im.getpixel((w, h)))
+                r, g, b = imgdata[0], imgdata[1], imgdata[2]
+                name = f'dust {r/255} {g/255} {b/255} {particle_size}'
+                x = x0 + w / zoom_level
+                y = y0 - h / zoom_level
+                z = z0
+                cmd = Command(t0, name, x, y, z, 0, 0, 0, 0, 1)
+                self.temp_cmds.append(cmd)
+        self.cmds_to_seq(t0, t1, self.temp_cmds)
 
 
 
