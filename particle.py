@@ -1,4 +1,4 @@
-import points
+import points as pt
 
 
 class Command:
@@ -98,24 +98,24 @@ class CmdBuilder:
             motions.append([((point[0] - x) / zoom), ((point[1] - y) / zoom), ((point[2] - z) / zoom)])
         self.motion_particle([x, y, z]*len(motions), motions, t0, t1, name, speed)
 
-    def motion_centre_spread(self, points, zoom):
+    def motion_centre_spread(self, points, t0, t1, name, speed, zoom=11):
         """生成粒子中心扩散动画"""
-        x, y, z = points
+        pu = pt.Utils()
+        x, y, z = pu.get_midpoint(points)
+        self.motion_spread_from_point(points, x, y, z, t0, t1, name, speed, zoom)
 
-
-    def motion_shrink_to_point(self, points, x, y, z, zoom):
+    def motion_shrink_to_point(self, points, x, y, z, t0, t1, name, speed, zoom=11):
         """生成粒子收缩动画"""
         motions = []
         for point in points:
             motions.append([((x - point[0]) / zoom), ((y - point[1]) / zoom), ((z - point[2]) / zoom)])
-        return motions
+        self.motion_particle(points, motions, t0, t1, name, speed)
 
-    def motion_centre_shrink(self, points, zoom=11):
+    def motion_centre_shrink(self, points, t0, t1, name, speed, zoom=11):
         """生成粒子中心收缩动画"""
-        x, y, z = self.midpoint(points)
-        return self.motion_shrink_to_point(points, x, y, z, zoom)
-
-
+        pu = pt.Utils()
+        x, y, z = pu.get_midpoint(points)
+        self.motion_shrink_to_point(points, x, y, z, t0, t1, name, speed, zoom)
 
     def color_particle_img(self, points, color, size, t0, t1):
         """生成彩色粒子画（1.13+）"""

@@ -449,6 +449,50 @@ class Shapes(Utils):
         points += self.line_link_one_to_n(ah[0], ah[1], ah[2], apexes, step)
         return points
 
+    def helix(self, x1, y1, z1, x2, y2, z2, r, step, degree=0, path_type='line', custom_points='', add=True, deg_d=3):
+        """
+        生成半径不变，轨迹支持自定义的螺线
+        :param x1: 点1 x
+        :param y1: 点1 y
+        :param z1: 点1 z
+        :param x2: 点2 x
+        :param y2: 点2 y
+        :param z2: 点2 z
+        :param r: 半径
+        :param degree: 起始角度
+        :param path_type: 螺线轨迹类型，
+        内置直线（line），抛物线(parabloa)，也可自定义(custom),自定义时需填写custom_points参数为你的点列表
+        :param custom_points: 点列表，自定义轨迹时会将此列表中的点作为轨迹
+        :param add: 是否附加轨迹点，False时将只返回螺线上的点
+        :param deg_d: 螺线旋转速度，单位 度
+        :return: 点列表
+        """
+        points = []
+        # 轨迹上的点列表
+        lp = []
+        if path_type == 'line':
+            lp = self.line(x1, y1, z1, x2, y2, z2, step)
+        elif path_type == 'parabola':
+            lp = self.parabola(x1, y1, z1, x2, y2, z2, step)
+        elif path_type == 'custom':
+            lp = custom_points
+        # 绘制圆的点先放这
+        cp1 = []
+        # 遍历轨迹点列
+        for i in range(0, len(lp) - 1):
+            # 圆心
+            x0, y0, z0 = lp[i][0], lp[i][1], lp[i][2]
+            # 圆平面法向量
+            n = list(self.vec_unit(lp[i], lp[i + 1]))
+            # 用圆心，法向量，半径绘制圆上一点
+            cp = self.circle_vec_point(x0, y0, z0, r, n, math.radians(degree))
+            cp1.append(cp)
+            degree += deg_d
+        if add:
+            points += lp
+        points += cp1
+        return points
+
 
 
 
