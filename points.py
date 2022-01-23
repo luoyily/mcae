@@ -107,6 +107,14 @@ class Utils:
         rx, ry, rz = tx+u1, ty+v1, tz+w1
         return rx, ry, rz
 
+    def rotate_points_by_vec(self, u1, v1, w1, u2, v2, w2, degree, points):
+        r_points = []
+        for p in points:
+            x, y, z = p[0], p[1], p[2]
+            rx, ry, rz = self.rotate_by_vec(u1, v1, w1, u2, v2, w2, degree, x, y, z)
+            r_points.append([rx, ry, rz])
+        return r_points
+
 
 class Shapes(Utils):
     def __init__(self):
@@ -304,8 +312,9 @@ class Shapes(Utils):
         points = []
         bezier_lists = self.bezier3x_xyz_points(points_list, step)
         for points_list in bezier_lists:
-            for point in points_list:
-                points.append(point)
+            # for point in points_list:
+            #     points.append(point)
+            points += points_list
         return points
 
     def circle_vec_point(self, x0, y0, z0, r, n, t):
@@ -460,7 +469,7 @@ class Shapes(Utils):
         :param r: 半径
         :param degree: 起始角度
         :param path_type: 螺线轨迹类型，
-        内置直线（line），抛物线(parabloa)，也可自定义(custom),自定义时需填写custom_points参数为你的点列表
+        内置直线（line），抛物线(parabola)，也可自定义(custom),自定义时需填写custom_points参数为你的点列表
         :param custom_points: 点列表，自定义轨迹时会将此列表中的点作为轨迹
         :param add: 是否附加轨迹点，False时将只返回螺线上的点
         :param deg_d: 螺线旋转速度，单位 度

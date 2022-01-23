@@ -45,6 +45,7 @@ class Function:
                     if is_debug:
                         f.write(f'tellraw @p {{"text":"Debug:{str(cmd)}","color":"aqua"}}\n')
             self.index += 1
+        self.index = 0
 
     def save_single_file(self, folder, filename):
         try:

@@ -144,22 +144,46 @@ class CmdBuilder:
                     points.append([x, y, z])
         self.static_particle(t0, t1, points, particle_name, 0, 0, 0, 0, 1)
 
-    def color_particle_img(self, filename, x0, y0, z0, zoom_level, t0, t1, particle_size):
-        """生成彩色粒子画（1.13+）"""
+    def color_particle_img(self, filename, x0, y0, z0, zoom_level, t0, t1, particle_size,
+                           is_rotate=False, vec1=None, vec2=None, degree=None):
+        """
+        生成彩色粒子画（1.13+）
+        :param filename: 带后缀的图片文件名
+        :param x0: 图片左上角坐标 x
+        :param y0: 图片左上角坐标 y
+        :param z0: 图片左上角坐标 z
+        :param zoom_level: 缩放级别，整数（推荐7）
+        :param t0: 起始Tick
+        :param t1: 结束Tick
+        :param particle_size: 粒子大小
+        :param is_rotate: 是否旋转
+        :param vec1: 旋转轴起点
+        :param vec2: 旋转轴终点
+        :param degree: 旋转角度
+        :return: None
+        """
         # particle minecraft:dust 1 1 1 1 ~ ~ ~ 0 0 0 0 1
         self.temp_cmds = []
+        pu = pt.Utils()
         im = Image.open(f'./images/{filename}')
         width, height = im.size[0], im.size[1]
         for w in range(0, width):
             for h in range(0, height):
                 imgdata = (im.getpixel((w, h)))
                 r, g, b = imgdata[0], imgdata[1], imgdata[2]
-                name = f'dust {r/255} {g/255} {b/255} {particle_size}'
+                name = f'dust {round(r/255, 4)} {round(g/255, 4)} {round(b/255, 4)} {particle_size}'
                 x = x0 + w / zoom_level
                 y = y0 - h / zoom_level
                 z = z0
-                cmd = Command(t0, name, x, y, z, 0, 0, 0, 0, 1)
-                self.temp_cmds.append(cmd)
+                if is_rotate:
+                    u1, v1, w1 = vec1[0], vec1[1], vec1[2]
+                    u2, v2, w2 = vec2[0], vec2[1], vec2[2]
+                    rx, ry, rz = pu.rotate_by_vec(u1, v1, w1, u2, v2, w2, degree, x, y, z)
+                    cmd = Command(t0, name, rx, ry, rz, 0, 0, 0, 0, 1)
+                    self.temp_cmds.append(cmd)
+                else:
+                    cmd = Command(t0, name, x, y, z, 0, 0, 0, 0, 1)
+                    self.temp_cmds.append(cmd)
         self.cmds_to_seq(t0, t1, self.temp_cmds)
 
 
