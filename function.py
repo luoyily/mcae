@@ -8,6 +8,11 @@ class Function:
         self.index = 0
 
     def get_seq_duration(self, cmds):
+        """
+        获取命令列表最大持续时长
+        :param cmds: 命令列表
+        :return: 最大Tick
+        """
         tick = 0
         for cmd in cmds:
             if cmd.tick > tick:
@@ -15,6 +20,11 @@ class Function:
         return tick
 
     def create_null_sequence(self, cmds):
+        """
+        由命令列表创建能够存下它的空序列
+        :param cmds: 命令列表
+        :return: None
+        """
         seq_duration = self.get_seq_duration(cmds)
         dx = seq_duration - len(self.cmds_list)
         if dx >= 0:
@@ -22,16 +32,34 @@ class Function:
                 self.cmds_list.append([])
 
     def add_cmd(self, cmds):
+        """
+        添加命令列表中的命令到总序列
+        :param cmds: 命令列表
+        :return: None
+        """
         self.create_null_sequence(cmds)
         for cmd in cmds:
             index = cmd.tick
             self.cmds_list[index].append(cmd)
 
     def add_custom_loop_cmds(self, loop_cmds):
+        """
+        在每tick添加自定义的指令。如 每tick TP玩家一次
+        :param loop_cmds: 命令列表
+        :return: None
+        """
         for cmds in self.cmds_list:
             cmds += loop_cmds
 
     def save_seq_file(self, folder, is_debug=False, build_schedule=True, namespace=''):
+        """
+        导出function序列
+        :param folder:文件夹
+        :param is_debug: 是否调试模式（聊天栏回显当前命令）
+        :param build_schedule: 是否生成schedule
+        :param namespace: 数据包命名空间
+        :return: None
+        """
         try:
             os.mkdir(f'./{folder}')
         except FileExistsError:
@@ -54,6 +82,12 @@ class Function:
                 f.write(schedule)
 
     def save_single_file(self, folder, filename):
+        """
+        将所有指令保存为一个文件
+        :param folder: 文件夹
+        :param filename: 文件名
+        :return: None
+        """
         try:
             os.mkdir(f'./{folder}')
         except FileExistsError:
