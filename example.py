@@ -16,6 +16,7 @@ line = shape.line(0, 0, 0, 20, 20, 20, 0.2)
 # 生成静态的粒子命令，动画从0Tick开始至20Tick结束，点使用上面生成的直线，粒子名为'end_rod'，
 # 粒子运动范围为0, 0, 0， 速度为0， 每条指令产生1个粒子
 particle_cmd.static_particle(0, 20, line, 'end_rod', 0, 0, 0, 0, 1)
+particle_cmd.static_particle(30, 40, line, 'end_rod', 0, 0, 0, 0, 1)
 # 将上面生成的粒子命令添加到function中，如果制作了多个粒子动画，每个都会保存在particle_cmd.cmds中，只需要在最后添加一次即可
 ani_func.add_cmd(particle_cmd.cmds)
 # 导出一个命令方块序列，用于执行以上制作的动画(在V1.0.1可用schedule模式导出，schedule功能需要游戏版本1.14以上)
