@@ -25,7 +25,7 @@ class Function:
         self.create_null_sequence(cmds)
         for cmd in cmds:
             index = cmd.tick
-            self.cmds_list[index].append(str(cmd))
+            self.cmds_list[index].append(cmd)
 
     def add_custom_loop_cmds(self, loop_cmds):
         for cmds in self.cmds_list:
