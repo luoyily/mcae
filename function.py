@@ -31,21 +31,27 @@ class Function:
         for cmds in self.cmds_list:
             cmds += loop_cmds
 
-    def save_seq_file(self, folder, is_debug=False):
+    def save_seq_file(self, folder, is_debug=False, build_schedule=True, namespace=''):
         try:
             os.mkdir(f'./{folder}')
         except FileExistsError:
             pass
-
+        schedule_tick = []
         for cmds in self.cmds_list:
-            f = open(f"./{folder}/{self.index}.mcfunction", "w")
-            for cmd in cmds:
-                if cmd:
+            if cmds:
+                f = open(f"./{folder}/{self.index}.mcfunction", "w")
+                for cmd in cmds:
                     f.write(str(cmd) + "\n")
                     if is_debug:
                         f.write(f'tellraw @p {{"text":"Debug:{str(cmd)}","color":"aqua"}}\n')
+                schedule_tick.append(cmds[0].tick)
             self.index += 1
         self.index = 0
+        if build_schedule:
+            f = open(f"./{folder}/schedule.mcfunction", "w")
+            for st in schedule_tick:
+                schedule = f'schedule function {namespace}:{folder}/{st} {st}\n'
+                f.write(schedule)
 
     def save_single_file(self, folder, filename):
         try:
