@@ -75,9 +75,13 @@ particle_cmd.static_particle(0, 20, line, 'end_rod', 0, 0, 0, 0, 1)
 # 将上面生成的粒子命令添加到function中，如果制作了多个粒子动画，每个都会保存在particle_cmd.cmds中，只需要在最后添加一次即可
 ani_func.add_cmd(particle_cmd.cmds)
 # 导出一个命令方块序列，用于执行以上制作的动画
-ani_func.output_cb_seq_function('mcae', 'ani', -10, 5, -10, 'x+', 64, 64)
+# V1.0.1 可用schedule模式导出，schedule功能需要游戏版本1.14以上
+# ani_func.output_cb_seq_function('mcae', 'ani', -10, 5, -10, 'x+', 64, 64)
 # 导出函数文件序列
-ani_func.save_seq_file('ani')
+# ani_func.save_seq_file('ani')
+# V1.0.1 注意，这里由原来的命令方块序列改为了schedule来执行function序列。
+# 游戏中请使用 形如“/function mcae:ani/schedule”的指令运行你的动画
+ani_func.save_seq_file('ani', build_schedule=True, namespace='mcae')
 # 至此，你可以将目录下的 ani 文件下放入你存档中数据包的functions文件夹下。
 # 例如：.minecraft\saves\新的世界\datapacks\example\data\mcae\functions
 # 如果你不会使用datapack 可以去Wiki搜索相关条目。
