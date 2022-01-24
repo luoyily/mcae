@@ -439,7 +439,7 @@ class Shapes(Utils):
         apexes.append(a1)
         for t in range(1, n):
             ap = self.rotate_by_vec(x0, y, z0, x0, y+1, z0, t * 360 / n, a1[0], a1[1], a1[2])
-            apexes.append([ap])
+            apexes.append(ap)
         return apexes
 
     def polygon(self, x0, y, z0, n, r, step):
