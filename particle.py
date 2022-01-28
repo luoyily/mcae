@@ -30,27 +30,27 @@ class CmdBuilder:
     def cls(self):
         self.cmds = []
 
-    def average_cmd_count(self, count, t0 , t1 , fun):
+    def average_cmd_count(self, count, t0, t1, fun):
         """计算每tick指令数"""
         count_list = []
-        tick=int(t1-t0+1)
+        tick = int(t1 - t0 + 1)
         if fun:
-            sum=0
-            for t in range(t0,t1+1):
-                n=fun(t)
-                count_list.append(n*count)
-                sum+=n
+            sum = 0
+            for t in range(t0, t1 + 1):
+                n = fun(t)
+                count_list.append(n * count)
+                sum += n
             for t in range(0, tick):
-                count_list[t]//=sum
+                count_list[t] //= sum
 
         else:
-        # 整除计算每tick需要的数量
+            # 整除计算每tick需要的数量
             i = count // tick
-        # 计算余数，之后平均插入
+            # 计算余数，之后平均插入
             r = count % tick
             for n in range(0, tick):
                 count_list.append(i)
-        # 将余下的点平均插入
+            # 将余下的点平均插入
             for n in range(0, int(r)):
                 if round(tick / r) * n < len(count_list):
                     count_list[round(tick / r) * n] += 1
@@ -64,13 +64,13 @@ class CmdBuilder:
         :param cmds: 指令列表
         :return: None
         """
-        cmds=self.temp_cmds
+        cmds = self.temp_cmds
         if t0 == t1:
             for cmd in cmds:
                 cmd.tick = t0
                 self.cmds.append(cmd)
         else:
-            count_list = self.average_cmd_count(len(cmds), t0,t1,fun)
+            count_list = self.average_cmd_count(len(cmds), t0, t1, fun)
             # 按每tick粒子数量切片列表
             index1, index2 = 0, 0
             for i, c in enumerate(count_list):
@@ -79,13 +79,13 @@ class CmdBuilder:
                     cmd.tick = t0 + i
                     self.cmds.append(cmd)
                 index1 = index2
-        self.temp_cmds=[]
+        self.temp_cmds = []
 
     def static_particle(self, t0, t1, points, name, dx, dy, dz, speed, amount):
         """生成普通粒子序列"""
         self.temp_cmds = []
         for p in points:
-            cmd = Command(t0, name, p[0],p[1],p[2], dx, dy, dz, speed, amount)
+            cmd = Command(t0, name, p[0], p[1], p[2], dx, dy, dz, speed, amount)
             self.temp_cmds.append(cmd)
         self.cmds_to_seq(t0, t1)
 
@@ -112,7 +112,7 @@ class CmdBuilder:
         motions = []
         for point in points:
             motions.append([((point[0] - x) / zoom), ((point[1] - y) / zoom), ((point[2] - z) / zoom)])
-        self.motion_particle([x, y, z]*len(motions), motions, t0, t1, name, speed)
+        self.motion_particle([x, y, z] * len(motions), motions, t0, t1, name, speed)
 
     def motion_centre_spread(self, points, t0, t1, name, speed, zoom=11):
         """生成粒子中心扩散动画"""
@@ -186,7 +186,7 @@ class CmdBuilder:
             for h in range(0, height):
                 imgdata = (im.getpixel((w, h)))
                 r, g, b = imgdata[0], imgdata[1], imgdata[2]
-                name = f'dust {round(r/255, 4)} {round(g/255, 4)} {round(b/255, 4)} {particle_size}'
+                name = f'dust {round(r / 255, 4)} {round(g / 255, 4)} {round(b / 255, 4)} {particle_size}'
                 x = x0 + w / zoom_level
                 y = y0 - h / zoom_level
                 z = z0
@@ -201,9 +201,7 @@ class CmdBuilder:
                     self.temp_cmds.append(cmd)
         self.cmds_to_seq(t0, t1)
 
-
-
-    def cmds_fun(self, t0, t1, fun, name, dx, dy, dz, speed, amount ,ppt=3,frags=None):
+    def cmds_fun(self, t0, t1, fun, name, dx, dy, dz, speed, amount, ppt=3, frags=None):
         """
         以参数方程形式生成命令
         :param t0:起始tick
@@ -213,32 +211,24 @@ class CmdBuilder:
         :param ppt:每tick点数,default:3
         """
         pu = pt.Utils()
-        dt=1/ppt
-        for tick in range(t0,t1):
+        dt = 1 / ppt
+        for tick in range(t0, t1):
             for i in range(ppt):
                 if not frags:
-                    points=pu.array_tran(fun(tick+i*dt))
+                    points = pu.array_tran(fun(tick + i * dt))
                 else:
-                    points=pu.array_tran(fun(tick+i*dt,*frags))
+                    points = pu.array_tran(fun(tick + i * dt, *frags))
                 for p in points:
                     cmd = Command(tick, name, p[0], p[1], p[2], dx, dy, dz, speed, amount)
                     self.cmds.append(cmd)
-    
-    def static_particle_fun(self, t0, t1, points, name, dx, dy, dz, speed, amount,fun):
+
+    def static_particle_fun(self, t0, t1, points, name, dx, dy, dz, speed, amount, fun):
         """
         生成普通粒子序列,时间的浓度方程版
         :param fun:时间浓度方程，参数为t，返回值为t时刻轨迹速度
-
         """
         self.temp_cmds = []
         for p in points:
-            cmd = Command(t0, name, p[0],p[1],p[2], dx, dy, dz, speed, amount)
+            cmd = Command(t0, name, p[0], p[1], p[2], dx, dy, dz, speed, amount)
             self.temp_cmds.append(cmd)
-        self.cmds_to_seq(t0, t1 ,fun)
-
-
-
-
-
-
-
+        self.cmds_to_seq(t0, t1, fun)

@@ -1,5 +1,5 @@
 import particle
-import function
+import function_generation
 import points
 
 
@@ -7,7 +7,7 @@ import points
 # 初始化形状，粒子命令生成器，函数生成器
 shape = points.Shapes()
 particle_cmd = particle.CmdBuilder()
-ani_func = function.Function()
+ani_func = function_generation.Function()
 
 # 用粒子绘制一张彩色图片
 particle_cmd.color_particle_img('test2.png', 0, 32, 0, 7, 0, 0, 1)
@@ -36,7 +36,7 @@ ani_func.save_seq_file('ani', build_schedule=True, namespace='mcae')
 # 围绕上面的贝塞尔曲线绘制螺线
 particle_cmd.cmds = []
 ani_func.cmds_list = []
-helix = shape.helix(21, 20, 20, 45, 23, -8, 3, 0.1,
+helix = shape.helix([21, 20, 20], [45, 23, -8], 3, 0.1,
                     degree=0, path_type='custom', custom_points=curve, add=True, deg_d=7)
 # 这次换点不一样子粒子
 particle_cmd.static_particle(0, 40, helix, 'end_rod', 0.1, 0.1, 0.1, 0.03, 3)
@@ -48,7 +48,7 @@ ani_func.save_seq_file('ani', build_schedule=True, namespace='mcae')
 # 单独绘制一条围绕抛物线的螺线
 particle_cmd.cmds = []
 ani_func.cmds_list = []
-helix = shape.helix(21, 20, 20, 100, 20, 100, 7, 0.1,
+helix = shape.helix([21, 20, 20], [100, 20, 100], 7, 0.1,
                     degree=0, path_type='parabola', add=True, deg_d=7)
 
 particle_cmd.static_particle(0, 40, helix, 'firework', 0.2, 0.2, 0.2, 0.1, 7)

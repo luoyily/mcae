@@ -1,5 +1,5 @@
 import particle
-import function
+import function_generation
 import points
 
 
@@ -7,12 +7,12 @@ import points
 # 初始化形状，粒子命令生成器，函数生成器
 shape = points.Shapes()
 particle_cmd = particle.CmdBuilder()
-ani_func = function.Function()
+ani_func = function_generation.Function()
 
 # 创建一条由0Tick到20Tick的粒子直线动画
 # 每个函数的详细参数都可以在相应代码的注释中查看（虽然还有部分注释未完善）
 # 生成一条起点为0, 0, 0 终点为20, 20, 20的直线，每0.2格在这条直线上取一个点。返回所有产生的点
-line = shape.line(0, 0, 0, 20, 20, 20, 0.2)
+line = shape.line([0, 0, 0], [20, 20, 20], 0.2)
 # 生成静态的粒子命令，动画从0Tick开始至20Tick结束，点使用上面生成的直线，粒子名为'end_rod'，
 # 粒子运动范围为0, 0, 0， 速度为0， 每条指令产生1个粒子
 particle_cmd.static_particle(0, 20, line, 'end_rod', 0, 0, 0, 0, 1)
