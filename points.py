@@ -1,9 +1,34 @@
+"""
+静态点列表库
+"""
+from inspect import classify_class_attrs
 import math
+from xml.etree.ElementTree import ProcessingInstruction
 import numpy as np
 np.set_printoptions(suppress=True)
 
 
 class Utils:
+    def array_tran(self,*points,t="list"):
+        """
+        转换坐标格式
+        :param: t:转换类别，默认为list，可选向量vec，或输出单个点points
+        """
+        out=[]
+        if type(points[0])!=list and len(points)==3:
+            out=[list(points)]
+        elif type(points[0][0])==list:
+            out=points[0]
+        else:
+            out=list(points)
+        if t=="list":
+            return out
+        if t=="vec":
+            return out[0]
+        if t=="points":
+            return out[0][0],out[0][1],out[0][2]
+            
+
     def get_distance(self, p1, p2):
         """
         求两点距离
@@ -11,9 +36,7 @@ class Utils:
         :param p2: 点2
         :return: 两点距离
         """
-        x1, y1, z1 = p1[0], p1[1], p1[2]
-        x2, y2, z2 = p2[0], p2[1], p2[2]
-        d = ((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2) ** 0.5
+        d = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1])  ** 2 + (p2[2] - p1[2]) ** 2) ** 0.5
         return d
 
     def move(self, points, x, y, z):
@@ -116,18 +139,42 @@ class Utils:
         return r_points
 
 
+    def Coordinate_transformation(self,e1,e2,*points,er1=[1,0,0],er2=[0,1,0],er3=[0,0,1]):
+        """
+        :param n1:基坐标1
+        :param n2:基坐标2
+        :param points:点
+        """
+        points=self.array_tran(*points,t="list")
+        pr=[]
+        e1=self.vec_unit([0,0,0],e1)
+        e2=self.vec_unit([0,0,0],e2)
+        if np.dot(e1,e2)!=0:
+            print("Error:坐标构建失败")
+            return
+        e3=np.cross(e1,e2)
+        A=np.inner([er1,er2,er3],[e1,e2,e3])
+        for p in points:
+            pr.append(list(np.matmul(A,p)))
+        return pr
+
+
+
+
+
 class Shapes(Utils):
     def __init__(self):
         Utils.__init__(self)
 
-    def line(self, x1, y1, z1, x2, y2, z2, step):
+    def line(self, p1, p2, step):
         """
         给出两点生成直线
         :param step: 步长
         :return: 点列表
         """
         points = []
-        x, y, z = x1, y1, z1
+        x, y, z = x1, y1, z1=p1[0],p1[1],p1[2]
+        x2, y2, z2=p2[0],p2[1],p2[2]
         d = self.get_distance([x1, y1, z1], [x2, y2, z2])
         # 计算需要的粒子数
         count = int(d/step)
@@ -158,7 +205,7 @@ class Shapes(Utils):
                 x1, y1, z1 = point_list[n][0], point_list[n][1], point_list[n][2]
                 x2, y2, z2 = point_list[n+1][0], point_list[n+1][1], point_list[n+1][2]
             # 函数line会返回一条直线上的所有点，将它添加到points中
-            points += self.line(x1, y1, z1, x2, y2, z2, step)
+            points += self.line([x1, y1, z1],[ x2, y2, z2], step)
         return points
 
     def line_link_one_to_n(self, x, y, z, points_list, step):
@@ -170,7 +217,7 @@ class Shapes(Utils):
         """
         points = []
         for p in points_list:
-            points += self.line(x, y, z, p[0], p[1], p[2], step)
+            points += self.line([x, y, z], p, step)
         return points
 
     def solve_parabola(self, x1, x2, x3, y1, y2, y3):
@@ -188,17 +235,32 @@ class Shapes(Utils):
         c = abc.tolist()[2][0]
         return a, b, c
 
-    def parabola(self, x1, y1, z1, x2, y2, z2, step):
+    def get_3rdpoint_parabola(self, x1, y1, z1, x2, y2, z2):
         """
-        给出两点生成抛物线
+        抛物线求出第三个点
         """
+        dy=y2-y1
+        d=self.get_distance([x1, y1, z1], [x2, y2, z2])
+        y3=(y2*(d-dy)/2/d+y1*(d+dy)/2/d+y2+(d-dy)/2)/2
+        x3=x2*(d-dy)/2/d+x1*(d+dy)/2/d
+        z3=z2*(d-dy)/2/d+z1*(d+dy)/2/d
+        return x3,y3,z3
+
+    
+    def parabola(self, p1, p2, step):
+        """
+        给出两点生成竖直平面内抛物线,xz平面内投影疏密均匀
+        """
+        
         points = []
-        x, y, z = x1, y1, z1
-        d = self.get_distance([x1, y1, z1], [x2, y2, z2])
+        x, y, z = x1, y1, z1=p1[0],p1[1],p1[2]
+        x2, y2, z2=p2[0],p2[1],p2[2]
+        x3,y3,z3=self.get_3rdpoint_parabola(x1, y1, z1, x2, y2, z2)
+        d = self.get_distance([x1, 0, z1], [x2, 0, z2])
+        d3 = self.get_distance([x1, 0, z1], [x3, 0, z3])
         count = int(d / step)
-        h = abs(d / 2)
         px = 0
-        a, b, c = self.solve_parabola(0, d / 2, d, 0, h, 0)
+        a, b, c = self.solve_parabola(0, d3, d, 0, y3-y1, y2-y1)
         dx = (x2 - x1) / count
         dz = (z2 - z1) / count
         for i in range(0, count + 1):
@@ -365,7 +427,7 @@ class Shapes(Utils):
 
     def circle(self, x, y, z, r, step):
         """
-        给出圆心，半径，生成y平面上的圆
+        给出圆心，半径，生成xz平面上的圆
         :param step: 步长
         :param x: 圆心x
         :param y: 圆心y
@@ -378,7 +440,7 @@ class Shapes(Utils):
 
     def ellipse(self, x0, y, z0, a, b, step):
         """
-        给出圆心，长轴及短轴长度，生成y平面椭圆
+        给出圆心，长轴及短轴长度，生成xz平面椭圆
         :param x0: 圆心x
         :param y: 圆心y
         :param z0: 圆心z
@@ -391,14 +453,14 @@ class Shapes(Utils):
         l = 2 * math.pi * b + 4 * (a - b)
         count = int(l / step)
         for i in range(0, count + 1):
-            x = x0 + a * math.cos(360 * (i / count) * (math.pi / 180))
-            z = z0 + b * math.sin(360 * (i / count) * (math.pi / 180))
+            x = x0 + a * math.cos(2 * math.pi * (i / count) )
+            z = z0 + b * math.sin(2 * math.pi * (i / count) )
             points.append([x, y, z])
         return points
 
     def rectangle(self, x0, y, z0, a, b, step):
         """
-        给出一个顶点和长宽，生成y平面矩形
+        给出一个顶点和长宽，生成xz平面矩形
         :param x0: 顶点x
         :param y: 顶点y
         :param z0: 顶点z
@@ -408,31 +470,31 @@ class Shapes(Utils):
         :return: 点列表
         """
         points = []
-        points += self.line(x0 - (a / 2), y, z0 + (b / 2), x0 + (a / 2), y, z0 + (b / 2), step)
-        points += self.line(x0 + (a / 2), y, z0 + (b / 2), x0 + (a / 2), y, z0 - (b / 2), step)
-        points += self.line(x0 + (a / 2), y, z0 - (b / 2), x0 - (a / 2), y, z0 - (b / 2), step)
-        points += self.line(x0 - (a / 2), y, z0 - (b / 2), x0 - (a / 2), y, z0 + (b / 2), step)
+        points += self.line([x0 - (a / 2), y, z0 + (b / 2)], [x0 + (a / 2), y, z0 + (b / 2)], step)
+        points += self.line([x0 + (a / 2), y, z0 + (b / 2)], [x0 + (a / 2), y, z0 - (b / 2)], step)
+        points += self.line([x0 + (a / 2), y, z0 - (b / 2)], [x0 - (a / 2), y, z0 - (b / 2)], step)
+        points += self.line([x0 - (a / 2), y, z0 - (b / 2)], [x0 - (a / 2), y, z0 + (b / 2)], step)
         return points
 
     def square(self, x0, y, z0, a, step):
         """
-        给出顶点，边长，生成y平面正方形
+        给出顶点，边长，生成xz平面正方形
         """
         points = []
         points += self.rectangle(x0, y, z0, a, a, step)
 
     def delta(self, x0, y, z0, a, step):
-        """给出中心，边长，生成y平面正三角形"""
+        """给出中心，边长，生成xz平面正三角形"""
         points = []
         r = a / (2 * math.sin(math.pi / 3))
-        points += self.line(x0 - a / 2, y, z0 - r * math.sin(math.pi / 6), x0, y, z0 + r, step)
-        points += self.line(x0, y, z0 + r, x0 + a / 2, y, z0 - r * math.sin(math.pi / 6), step)
-        points += self.line(x0 + a / 2, y, z0 - r * math.sin(math.pi / 6), x0 - a / 2, y,
-                            z0 - r * math.sin(math.pi / 6), step)
+        points += self.line([x0 - a / 2, y, z0 - r * math.sin(math.pi / 6)], [x0, y, z0 + r], step)
+        points += self.line([x0, y, z0 + r], [x0 + a / 2, y, z0 - r * math.sin(math.pi / 6)], step)
+        points += self.line([x0 + a / 2, y, z0 - r * math.sin(math.pi / 6)], [x0 - a / 2, y,
+                            z0 - r * math.sin(math.pi / 6)], step)
         return points
 
     def polygon_apex(self, x0, y, z0, n, r, step):
-        """给出中心，边数，半径，生成y平面正多边形的各个顶点"""
+        """给出中心，边数，半径，生成xz平面正多边形的各个顶点"""
         apexes = []
         ex_angle = math.radians(360 / n)
         a1 = (x0 - r * math.cos(ex_angle / 2), y, z0 + r * math.sin(ex_angle / 2))
@@ -443,7 +505,7 @@ class Shapes(Utils):
         return apexes
 
     def polygon(self, x0, y, z0, n, r, step):
-        """给出中心，边数，半径，生成y平面正多边形"""
+        """给出中心，边数，半径，生成xz平面正多边形"""
         apexes = self.polygon_apex(x0, y, z0, n, r, step)
         points = self.line_link(apexes, step)
         return points
@@ -457,7 +519,7 @@ class Shapes(Utils):
         points += self.line_link_one_to_n(ah[0], ah[1], ah[2], apexes, step)
         return points
 
-    def helix(self, x1, y1, z1, x2, y2, z2, r, step, degree=0, path_type='line', custom_points='', add=True, deg_d=3):
+    def helix(self, p1, p2, r, step, degree=0, path_type='line', custom_points=[], add=True, deg_d=3):
         """
         生成半径不变，轨迹支持自定义的螺线
         :param x1: 点1 x
@@ -475,13 +537,15 @@ class Shapes(Utils):
         :param deg_d: 螺线旋转速度，单位 度
         :return: 点列表
         """
+        x1, y1, z1 = p1[0], p1[1], p1[2]
+        x2, y2, z2 = p2[0], p2[1], p2[2]
         points = []
         # 轨迹上的点列表
         lp = []
         if path_type == 'line':
-            lp = self.line(x1, y1, z1, x2, y2, z2, step)
+            lp = self.line([x1, y1, z1], [x2, y2, z2], step)
         elif path_type == 'parabola':
-            lp = self.parabola(x1, y1, z1, x2, y2, z2, step)
+            lp = self.parabola([x1, y1, z1], [x2, y2, z2], step)
         elif path_type == 'custom':
             lp = custom_points
         # 绘制圆的点先放这
@@ -501,6 +565,47 @@ class Shapes(Utils):
         points += cp1
         return points
 
+    
+    def cuboid(self,x0,y0,z0,n1,n2,step,a=1,b=1,c=1):
+        """
+        生成长方体
+        """
+        a/=2
+        b/=2
+        c/=2
+        
+        relative_p=[]
+        relative_p+=self.line([a,b,c],[a,b,-c],step)
+        relative_p+=self.line([a,b,c],[-a,b,c],step)
+        relative_p+=self.line([-a,b,c],[-a,b,-c],step)
+        relative_p+=self.line([a,b,-c],[-a,b,-c],step)
+        relative_p+=self.line([a,b,c],[a,-b,c],step)
+        relative_p+=self.line([-a,b,c],[-a,-b,c],step)
+        relative_p+=self.line([a,b,-c],[a,-b,-c],step)
+        relative_p+=self.line([-a,b,-c],[-a,-b,-c],step)
+        relative_p+=self.line([a,-b,c],[a,-b,-c],step)
+        relative_p+=self.line([a,-b,c],[-a,-b,c],step)
+        relative_p+=self.line([-a,-b,c],[-a,-b,-c],step)
+        relative_p+=self.line([a,-b,-c],[-a,-b,-c],step)
+        p=self.Coordinate_transformation(n1,n2,relative_p)
+        points = []
+        for itm in p:
+            points.append(list(np.array([x0,y0,z0]+np.array(itm))))
+        return points
 
+    def cub(self,x0,y0,z0,step=0.1,a=1,n1=[1,0,0],n2=[0,1,0]):
+        """
+        生成正方体
+        :param x0: 中心点
+        :param y0: 中心点
+        :param z0: 中心点
+        :param n: 一个面的法向量
+        :param n: 另个面的法向量
+        :param step:步长
+        :param a: 边长 default=1
+        :return: 点列表
+        """
+
+        return self.cuboid(x0,y0,z0,n1,n2,step,a,a,a)
 
 
