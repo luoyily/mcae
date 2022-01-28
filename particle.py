@@ -208,19 +208,21 @@ class CmdBuilder:
         以参数方程形式生成命令
         :param t0:起始tick
         :param t1:终止tick
-        :param fun:坐标函数，参数格式为（t，*frags），返回值为x，y，z
+        :param fun:坐标函数，参数格式为（t，*frags），返回值为[p1,p2,p3……]或x,y,z或[x,y,z]
         :param frags:需要传入fun的参数，用元组表示，如fun的参数为（t,a,b,c），则frags=（a,b,c）
         :param ppt:每tick点数,default:3
         """
+        pu = pt.Utils()
         dt=1/ppt
         for tick in range(t0,t1):
             for i in range(ppt):
                 if not frags:
-                    x,y,z=fun(tick+i*dt)
+                    points=pu.array_tran(fun(tick+i*dt))
                 else:
-                    x,y,z=fun(tick+i*dt,*frags)
-                cmd = Command(tick, name, x, y, z, dx, dy, dz, speed, amount)
-                self.cmds.append(cmd)
+                    points=pu.array_tran(fun(tick+i*dt,*frags))
+                for p in points:
+                    cmd = Command(tick, name, p[0], p[1], p[2], dx, dy, dz, speed, amount)
+                    self.cmds.append(cmd)
     
     def static_particle_fun(self, t0, t1, points, name, dx, dy, dz, speed, amount,fun):
         """
